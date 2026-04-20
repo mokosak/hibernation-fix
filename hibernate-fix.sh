@@ -130,8 +130,9 @@ esac
 # LUKS
 LUKS=0
 LUKS_HOOK=""
-if [[ "$ROOT_SRC" == /dev/mapper/* ]]; then
-    if cryptsetup status "$(basename "$ROOT_SRC")" 2>/dev/null | grep -q 'type:.*LUKS'; then
+ROOT_SRC_DEV="${ROOT_SRC%%\[*}"   # strip btrfs subvol suffix, e.g. /dev/mapper/root[/@] → /dev/mapper/root
+if [[ "$ROOT_SRC_DEV" == /dev/mapper/* ]]; then
+    if cryptsetup status "$(basename "$ROOT_SRC_DEV")" 2>/dev/null | grep -q 'type:.*LUKS'; then
         LUKS=1
         # detect which encrypt hook is active
         if grep -qE '^\s*HOOKS=.*\bsd-encrypt\b' /etc/mkinitcpio.conf; then
