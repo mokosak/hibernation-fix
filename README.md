@@ -8,7 +8,7 @@ I have a laptop with hybrid Intel + NVIDIA graphics. Suspend gave me a black scr
 
 The fix is "just" a swapfile, a `resume` hook, a kernel cmdline change, and an initramfs rebuild. Simple on paper. In practice you're juggling btrfs subvolumes, LUKS ordering quirks, three different bootloaders that all want their cmdline written differently, and — if you have NVIDIA — a couple of systemd services nobody tells you about.
 
-So: a script. Run it once, it figures out your setup, tells you exactly what it's going to do, and only touches things after you say yes. Every file it edits is backed up. If anything goes sideways, `--revert` puts it all back.
+So: a script. Run it once, pick preview/apply/revert in the terminal UI, and it tells you exactly what it is going to do before it writes anything. Every file it edits is backed up. If anything goes sideways, `--revert` puts it all back.
 
 ## What it does
 
@@ -36,8 +36,11 @@ If your setup is outside this matrix, the script aborts with a clear error rathe
 ## Usage
 
 ```bash
-# See what it would do — no changes, always safe:
+# Open the terminal UI:
 sudo ./hibernate-fix.sh
+
+# Or run a plain preview with no TUI:
+./hibernate-fix.sh --dry-run
 
 # Apply the changes:
 sudo ./hibernate-fix.sh --apply
@@ -64,10 +67,12 @@ sudo systemctl hibernate
 - `--no-gpu` — skip the GPU-specific steps
 - `--nvidia-drm-modeset` — add `nvidia-drm.modeset=1` to cmdline (NVIDIA only)
 - `--yes` / `-y` — skip the "proceed?" prompt
+- `--tui` — force the terminal UI
 
 ## Safety
 
 - `--dry-run` is the default. You have to ask for changes.
+- In an interactive terminal, running with no arguments opens the TUI. The first action is still preview, not apply.
 - Every file touched is copied to `/var/backups/hibernate-fix/<timestamp>/` before being edited, along with a manifest so `--revert` knows what to restore.
 - Re-runs are idempotent: if hibernation is already configured, it says so and exits.
 - Unsupported hardware / missing S4 / unknown bootloader → hard error, no edits.
